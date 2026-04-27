@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧽 测测你是海绵宝宝里的谁？</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --yellow: #FFE600;
+  --blue: #0072C6;
+  --pink: #FF69B4;
+  --dark: #1a1a2e;
+  --bubble: rgba(255,255,255,0.08);
+  --gold: #FFD700;
+  --crack: #666;
+}
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--dark);
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* === Ocean Background === */
+.ocean-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, #0a1628 0%, #0d2847 30%, #0a3d6b 60%, #0b4a7a 100%);
+  z-index: -2;
+}
+.ocean-floor {
+  position: fixed;
+  bottom: 0; left: 0; right: 0; height: 80px;
+  background: linear-gradient(180deg, transparent, #1a3a2a 40%, #2d5a3e);
+  z-index: -1;
+}
+.light-rays {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0px,
+    transparent 100px,
+    rgba(255,255,200,0.03) 100px,
+    rgba(255,255,200,0.01) 200px
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* === Bubbles === */
+.bubble-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bubble {
+  position: absolute;
+  bottom: -40px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.6; }
+  50% { opacity: 0.4; }
+  100% { transform: translateY(-110vh) scale(0.3) rotate(720deg); opacity: 0; }
+}
+
+/* === Question bubble animation === */
+.question-bubble-enter {
+  animation: bubbleEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes bubbleEnter {
+  0% { transform: scale(0) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.option-enter {
+  opacity: 0; transform: translateX(-20px);
+  animation: optionSlide 0.4s ease forwards;
+}
+@keyframes optionSlide {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* === Screens === */
+.screen {
+  display: none;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* === Start Screen === */
+#start-screen {
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+.logo-title {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--yellow), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+.subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 30px;
+}
+.kaishui {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+.start-btn {
+  background: linear-gradient(135deg, var(--yellow), #FFC107);
+  color: var(--dark);
+  border: none;
+  padding: 16px 60px;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Noto Sans SC', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+.start-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255,230,0,0.4);
+}
+.start-btn:active { transform: scale(0.97); }
+
+/* === Quiz Screen === */
+#quiz-screen {
+  padding: 30px 20px;
+  justify-content: flex-start;
+}
+.quiz-header {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+.progress-bar-container {
+  width: 100%;
+  max-width: 600px;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--yellow), var(--pink));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.question-number {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.5);
+}
+.question-card {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+}
+.question-text {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 700;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+.options-list { display: flex; flex-direction: column; gap: 10px; }
+.option-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 14px 20px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: 'Noto Sans SC', sans-serif;
+  line-height: 1.4;
+}
+.option-btn:hover {
+  background: rgba(255,230,0,0.12);
+  border-color: var(--yellow);
+  transform: translateX(5px);
+}
+.option-btn.selected {
+  background: rgba(255,230,0,0.18);
+  border-color: var(--yellow);
+  box-shadow: 0 0 15px rgba(255,230,0,0.15);
+}
+
+/* === Result Screen === */
+#result-screen {
+  padding: 40px 20px;
+  justify-content: center;
+  overflow: hidden;
+}
+.result-container {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+  position: relative;
+}
+.rarity-badge {
+  display: inline-block;
+  padding: 6px 20px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+}
+.rarity-SSR { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e; }
+.rarity-SR { background: linear-gradient(135deg, #C0C0C0, #E8E8E8); color: #1a1a2e; }
+.rarity-R { background: linear-gradient(135deg, #4A90D9, #6BB3F0); color: #fff; }
+.rarity-N { background: linear-gradient(135deg, #6B7280, #9CA3AF); color: #fff; }
+.rarity-C { background: linear-gradient(135deg, #8B5E3C, #A0785A); color: #fff; }
+.rarity-D { background: linear-gradient(135deg, #4A4A4A, #2D2D2D); color: #888; border: 1px solid #555; }
+
+.result-name {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 900;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.result-desc {
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: rgba(255,255,255,0.8);
+  line-height: 1.7;
+  margin-bottom: 25px;
+  text-align: left;
+  background: rgba(0,0,0,0.3);
+  border-radius: 16px;
+  padding: 20px;
+  border-left: 4px solid var(--yellow);
+}
+.result-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+.detail-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+}
+.detail-card .label {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.detail-card .value {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.day-vignette {
+  text-align: left;
+  margin: 15px 0 25px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px dashed rgba(255,255,255,0.1);
+}
+.share-card-area {
+  margin: 20px 0;
+  position: relative;
+}
+#shareCanvas {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  display: block;
+  margin: 0 auto;
+}
+.share-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.share-btn, .retake-btn {
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.share-btn {
+  background: linear-gradient(135deg, var(--yellow), #FFC107);
+  color: var(--dark);
+}
+.share-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,230,0,0.3); }
+.retake-btn {
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.retake-btn:hover { background: rgba(255,255,255,0.05); }
+
+/* === SSR Gold Glow === */
+.ssr-glow {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: inset 0 0 100px rgba(255,215,0,0.1); }
+  50% { box-shadow: inset 0 0 200px rgba(255,215,0,0.25); }
+}
+
+/* === D Grade Cracked === */
+.d-crack {
+  position: relative;
+}
+.d-crack::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0px,
+    transparent 20px,
+    rgba(100,100,100,0.05) 20px,
+    rgba(100,100,100,0.05) 21px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* === Responsive === */
+@media (max-width: 480px) {
+  .question-card { padding: 20px 16px; }
+  .result-details { grid-template-columns: 1fr; }
+  .option-btn { font-size: 0.9rem; padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="ocean-bg"></div>
+<div class="ocean-floor"></div>
+<div class="light-rays"></div>
+<div class="bubble-container" id="bubbleContainer"></div>
+
+<!-- START SCREEN -->
+<div id="start-screen" class="screen active">
+  <div class="logo-title">🧽<br>测测你是海绵宝宝里的谁？</div>
+  <div class="subtitle">🌊 欢迎来到比奇堡 · 海底人格解剖</div>
+  <div class="kaishui">
+    🧬 本测试基于 SBTI 科学（完全虚构）<br>
+    ⚠️ 80% 的人测出来都是路人，你最好有点心理准备<br>
+    📊 12 道题 · 15+ 种结局 · 1 个真相
+  </div>
+  <button class="start-btn" onclick="startQuiz()">⬇️ 潜入比奇堡</button>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen" class="screen">
+  <div class="quiz-header">
+    <span class="question-number" id="qNum">第 1 / 12 题</span>
+  </div>
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="question-card" id="questionCard"></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen">
+  <div class="result-container" id="resultContainer"></div>
+</div>
+
+<script>
+// ========== BUBBLES ==========
+function createBubbles() {
+  const container = document.getElementById('bubbleContainer');
+  for (let i = 0; i < 20; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 5 + Math.random() * 25;
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + '%';
+    b.style.animationDuration = (15 + Math.random() * 25) + 's';
+    b.style.animationDelay = (Math.random() * 20) + 's';
+    container.appendChild(b);
+  }
+}
+createBubbles();
+
+// ========== QUESTION DATA ==========
+const questions = [
+  {
+    q: '你走进一个房间，第一个注意到什么？',
+    options: [
+      { text: '出口在哪（求生本能）', scores: { fred: 3, puff: 2, stone: 1 } },
+      { text: '谁在看我（被迫害妄想）', scores: { squidward: 3, selfportrait: 2, karen: 1 } },
+      { text: '有没有吃的', scores: { sponge: 2, krabs: 2, menu: 2 } },
+      { text: '空调温度', scores: { sandy: 2, water: 2, fred: 1 } }
+    ]
+  },
+  {
+    q: '朋友突然不回消息了，你？',
+    options: [
+      { text: '连发 8 条追问', scores: { sponge: 3, patrick: 2, ready: 1 } },
+      { text: '假装没发过', scores: { squidward: 3, menu: 2, selfportrait: 1 } },
+      { text: '觉得他死了', scores: { fred: 3, puff: 2, stone: 1 } },
+      { text: '松了口气', scores: { water: 3, menu: 2, squidward: 2 } }
+    ]
+  },
+  {
+    q: '你在电梯里会？',
+    options: [
+      { text: '看楼层数假装很忙', scores: { squidward: 3, puff: 2, selfportrait: 1 } },
+      { text: '偷看别人手机屏幕', scores: { krabs: 2, fred: 2, karen: 2 } },
+      { text: '对着镜子整理头发', scores: { sponge: 2, patrick: 2, selfportrait: 2 } },
+      { text: '什么都不做，放空，成为电梯的一部分', scores: { water: 3, stone: 3, menu: 1 } }
+    ]
+  },
+  {
+    q: '你小时候被冤枉了会？',
+    options: [
+      { text: '当场爆哭', scores: { sponge: 3, fred: 2, puff: 1 } },
+      { text: '咬牙不说话但记一辈子', scores: { squidward: 3, selfportrait: 2, stone: 1 } },
+      { text: '无所谓，被冤枉多了', scores: { water: 3, menu: 2, fred: 2 } },
+      { text: '反手冤枉回去', scores: { krabs: 3, patrick: 2, ready: 1 } }
+    ]
+  },
+  {
+    q: '如果你是一种声音，你是？',
+    options: [
+      { text: '微波炉叮的那一声', scores: { ready: 3, sponge: 1, menu: 1 } },
+      { text: '远处的施工噪音', scores: { fred: 3, puff: 2, stone: 1 } },
+      { text: '深夜冰箱的嗡嗡声', scores: { water: 3, squidward: 2, selfportrait: 1 } },
+      { text: '有人在隔壁笑但你不知道笑什么', scores: { patrick: 3, stone: 2, karen: 1 } }
+    ]
+  },
+  {
+    q: '你看到地上有一块钱，你？',
+    options: [
+      { text: '捡起来放好，这是命运的安排', scores: { firstdollar: 3, krabs: 3, karen: 1 } },
+      { text: '假装没看到，捡钱丢人', scores: { squidward: 3, menu: 2, selfportrait: 1 } },
+      { text: '踩上去看看有没有人注意', scores: { patrick: 3, stone: 2, ready: 1 } },
+      { text: '直接路过——我连看都没看到', scores: { water: 3, fred: 2, puff: 1 } }
+    ]
+  },
+  {
+    q: '你的冰箱里最常出现的是？',
+    options: [
+      { text: '过期三个月的披萨', scores: { fred: 3, patrick: 2, stone: 1 } },
+      { text: '整整齐齐的 meal prep', scores: { sandy: 3, squidward: 2, karen: 1 } },
+      { text: '只有饮料和酱料包', scores: { sponge: 2, menu: 2, puff: 1 } },
+      { text: '一个灯泡和一些发霉的柠檬', scores: { water: 3, selfportrait: 2, stone: 2 } }
+    ]
+  },
+  {
+    q: '同事/同学讲了一个很无聊的笑话，你？',
+    options: [
+      { text: '笑到拍桌子给足面子', scores: { sponge: 3, patrick: 2, ready: 1 } },
+      { text: '皮笑肉不笑地点点头', scores: { squidward: 3, puff: 2, karen: 1 } },
+      { text: '没听到，在想晚饭', scores: { fred: 3, menu: 2, water: 1 } },
+      { text: '分析这个笑话为什么不好笑', scores: { sandy: 3, krabs: 2, selfportrait: 1 } }
+    ]
+  },
+  {
+    q: '你最擅长的事是什么？',
+    options: [
+      { text: '活着，仅此而已', scores: { fred: 3, water: 2, stone: 2 } },
+      { text: '让别人尴尬', scores: { sponge: 3, patrick: 2, ready: 1 } },
+      { text: '假装在忙', scores: { squidward: 3, menu: 2, puff: 1 } },
+      { text: '算每一分钱', scores: { krabs: 3, firstdollar: 2, karen: 1 } }
+    ]
+  },
+  {
+    q: '周末你通常会？',
+    options: [
+      { text: '大扫除然后做一顿精致的早餐', scores: { sandy: 3, sponge: 2, karen: 1 } },
+      { text: '躺尸到下午然后开始后悔', scores: { squidward: 3, fred: 2, stone: 2 } },
+      { text: '出门找乐子搞事情', scores: { patrick: 3, sponge: 2, ready: 1 } },
+      { text: '加班，因为心里不踏实', scores: { krabs: 3, firstdollar: 2, puff: 1 } }
+    ]
+  },
+  {
+    q: '有人在你背后说你坏话，你？',
+    options: [
+      { text: '直接走过去对峙', scores: { sandy: 3, krabs: 2, karen: 1 } },
+      { text: '默默走开，晚上反复回想', scores: { squidward: 3, selfportrait: 2, puff: 1 } },
+      { text: '无所谓，反正我已经习惯了', scores: { water: 3, fred: 2, menu: 1 } },
+      { text: '加入他们一起说自己', scores: { patrick: 3, stone: 2, ready: 1 } }
+    ]
+  },
+  {
+    q: '如果你是一种天气，你是？',
+    options: [
+      { text: '大晴天——晒到所有人', scores: { sponge: 3, sandy: 2, ready: 1 } },
+      { text: '毛毛雨——也没人带伞', scores: { fred: 3, menu: 2, water: 1 } },
+      { text: '雾霾——存在但看不清楚', scores: { squidward: 2, selfportrait: 2, stone: 2 } },
+      { text: '暴风——来了大家都躲', scores: { krabs: 2, karen: 2, patrick: 2 } }
+    ]
+  }
+];
+
+// ========== CHARACTER DATA ==========
+const characters = {
+  sponge: {
+    name: '🧽 海绵宝宝',
+    rarity: 'SSR',
+    subtitle: '概率 < 1% · 人间极品',
+    description: '你是那种永远快乐、毫无理由地热爱一切的人。说实话测到这个结果的人要么在装，要么真的需要被研究一下。你的快乐不是装的——你就真的是这样。这让所有人既羡慕又困惑。世界上有两种人：一种想成为你，一种想让你闭嘴。但你不在乎，因为你正在用吸尘器吸地板并为此感到由衷的快乐。',
+    daily: '早上 5:00 准时起床，先和你的宠物说早安。出门前和每一朵花打招呼。上班路上抓了十只水母然后放了。在蟹堡王用 200% 的热情煎了一个汉堡，客人被你的笑容吓到。下班回家做了个蛋糕送给隔壁讨厌你的邻居。睡前写日记：今天又是完美的一天！',
+    fear: '你的快乐被夺走的那一天',
+    understand: '派大星——至少在精神层面，你们互相理解（虽然这种理解本身也很可疑）',
+    networth: '∞（无价之宝，但你自己并不值钱）',
+    color: '#FFE600'
+  },
+  patrick: {
+    name: '⭐ 派大星',
+    rarity: 'SSR',
+    subtitle: '概率 < 1% · 脑部谜团',
+    description: '你的脑子是比奇堡最大的谜团，包括对你自己。你不是笨——你是生活在另一个维度的存在。你的思维方式让所有逻辑学家崩溃。但说实话，你活得比大多数人都开心，因为你根本不在乎别人怎么想——严格来说，你根本不在乎任何事情。你只是存在着。而这份"存在"本身，就是你的超能力。',
+    daily: '早上被闹钟吵醒，然后关掉闹钟继续睡。中午醒来发现肚子饿了，但忘记家里有没有吃的。去蟹堡王找海绵宝宝，在门口站了十分钟想不起来要干嘛。最后坐在一块石头下面发呆到天黑。晚上想：我今天好像做了很多事。实际上什么也没做。',
+    fear: '自己一个人（但连"恐惧"这个概念也要想很久）',
+    understand: '海绵宝宝——只有他能听懂你说的话（虽然他自己可能也没听懂）',
+    networth: '约 0.02 个蟹黄堡（含石头价值）',
+    color: '#FF69B4'
+  },
+  squidward: {
+    name: '🐙 章鱼哥',
+    rarity: 'SR',
+    subtitle: '概率 4% · 清醒的痛苦',
+    description: '你有才华但没人在乎，你清醒地活在一群快乐的疯子中间。你是朋友圈里那个"最正常"的人，但这份正常让你格格不入。你热爱艺术、追求品质，却被困在一个所有人都满足于垃圾食品的世界里。你的痛苦不是来自怀才不遇，而是来自你太清楚自己怀才不遇。每天最快乐的时候是下班回家关上门的那一刻。',
+    daily: '早上被隔壁的傻笑吵醒，狠狠叹了口气。上班被客人要各种奇怪要求——第 37 次被要求"微笑服务"。午休时拿出单簧管吹了三个音符就放弃了。下班路上被海绵宝宝拉着去看水母。回家后对着自画像自言自语：我不属于这里。然后打开电视看深夜无聊节目——这大概就是生活吧。',
+    fear: '海绵宝宝和派大星同时来找你玩',
+    understand: '泡芙老师——你们互相理解那种"每天都在忍耐"的感觉',
+    networth: '约 1.5 个蟹黄堡（含单簧管折旧）',
+    color: '#87CEEB'
+  },
+  krabs: {
+    name: '🦀 蟹老板',
+    rarity: 'SR',
+    subtitle: '概率 4% · 安全感外包',
+    description: '你不是爱钱，你只是把安全感外包给了银行卡余额。在内心深处，你害怕那个什么都没有的自己。所以你攒钱、算计、精打细算。你对别人抠门，对自己更抠门。但你知道吗？你不是真的吝啬——你只是太清楚这个世界有多贵了。你的一块钱是你的一整个世界。而这个世界正在被一个穿红色泳裤的家伙用蟹黄堡慢慢掏空。',
+    daily: '早上数了三次收银机里的钱。跟海绵宝宝说"再浪费一个蟹饼就从你工资扣"。发现章鱼哥又在偷懒，记了一笔。中午吃了一个最便宜的员工餐。下午为了省电把空调关了，整个蟹堡王热得像地狱。下班回家抱着第一块钱入睡。梦里还是钱。',
+    fear: '有人动了我的钱',
+    understand: '蟹老板的第一块钱——但那种关系本质上是自恋',
+    networth: '约 47,329,182 个蟹黄堡（每个 1.99 美元）',
+    color: '#DC143C'
+  },
+  snail: {
+    name: '🐌 小蜗',
+    rarity: 'R',
+    subtitle: '概率 12% · 沉默的智者',
+    description: '你是那个看穿一切但只会"喵"一声的人。沉默而清醒。你什么都知道——你看到海绵宝宝把锅铲插进烤面包机里了，你只是懒得管。你知道派大星的石头底下藏着什么，但你不说。你活得很慢，但每一秒都很有质量。你是这个世界上最接近哲学生物的人。如果你的生活是一部电影，你的画外音会是最冷静的旁白。',
+    daily: '早上趴在窗台上晒太阳。看海绵宝宝以不可思议的方式做早餐。出门散步，在路上看到水母从身边飘过——太慢了，没兴趣追。在一个角落里睡了三个小时。被回家的海绵宝宝抱着看电视。他笑得很开心，你睡着了。完美的一天。',
+    fear: '被饿着（你也是有底线的）',
+    understand: '章鱼哥——你们是这片混乱中唯二清醒的灵魂，虽然他话太多了',
+    networth: '约 0.8 个蟹黄堡（含蜗牛粮）',
+    color: '#98D8C8'
+  },
+  sandy: {
+    name: '🐿️ 珊迪',
+    rarity: 'R',
+    subtitle: '概率 12% · 永远的异乡人',
+    description: '你是外来者，你比所有本地人都努力，但他们永远觉得你"不太一样"。你有一种不服输的劲——为了融入这里，你给自己造了一个能呼吸的太空服。但无论你怎么努力，你还是那只来自德州的松鼠。你的特点：专业能力拉满，社交距离感也拉满。你不需要别人喜欢你，你需要别人认可你。但夜深人静的时候，脱下头盔，你也会想：我到底属不属于这里？',
+    daily: '早上 5:30 起床做高空俯卧撑和腿部拉伸。穿着宇航服出门——今天气压不太对，调了三次阀门。去实验室做研究，发现海绵宝宝用她的显微镜看蟹黄堡上的芝麻。下午去蟹堡王试图教大家怎么正确使用刀叉。失败。晚上回到树屋，一个人看星星。德州的方向是哪边来着？',
+    fear: '头盔被偷（窒息的恐惧是真实的）',
+    understand: '泡芙老师——同样是外来者，同样在努力维持体面',
+    networth: '约 25 个蟹黄堡（含高科技树屋折旧）',
+    color: '#8B4513'
+  },
+  fred: {
+    name: '🐟 Fred ("My Leg!"鱼)',
+    rarity: 'N',
+    subtitle: '概率 22% · 永远的受害者',
+    description: '你就是那个永远在受伤、永远在喊救命、但没人真正关心的人。你是所有事故的背景板。你的生活可以总结为一句话："我的腿！！！"不管发生什么——爆炸、车祸、海绵宝宝的一个意外操作——受伤的总有你。但你依然活着，依然在喊。你的韧性令人敬佩，虽然你的痛苦无人问津。你的人生就是一句"My Leg!"的无限循环。',
+    daily: '早上出门，被派大星不小心绊了一下，摔进下水道——"My Leg!"去便利店买个三明治，蟹堡王施工的砖头掉下来砸到脚——"MY LEG!!"路过比奇堡广场，海绵宝宝在开派对，炸药飞过来——"MY LEG!!!"回家的时候发现门被锁了，坐在门口等房东来。今天也算是活下来了。',
+    fear: '海绵宝宝开派对',
+    understand: '比奇堡的海水——你们都是被忽视的存在，但至少它会蒸发，你不会',
+    networth: '约 0.3 个蟹黄堡（含医疗费负债）',
+    color: '#7FB3D8'
+  },
+  puff: {
+    name: '🐡 泡芙老师',
+    rarity: 'N',
+    subtitle: '概率 22% · 崩溃边缘的体面',
+    description: '你在崩溃的边缘维持体面已经很多年了。每天都有人在测试你的底线，而你居然还没爆炸，respect。你有一个让你头疼到炸的学生，有一份让你焦虑到秃的工作，但你还是每天早上穿上职业装，深吸一口气，走进教室。你的内心是一部灾难片，你的外表是一档教育节目。你不是在教书——你是在求生。',
+    daily: '早上喝了两杯咖啡才敢出门。到驾校发现海绵宝宝已经在等了——感觉血压上来了。第四次解释什么是"刹车"。海绵宝宝把车开到了树上。你第五次被气到膨胀成一个球。下班后一个人坐在空教室里发呆半小时。回家给自己倒了一杯酒，打开电视，不看任何与车有关的内容。明天又是新的一天。（颤抖）',
+    fear: '海绵宝宝来上驾校课',
+    understand: '章鱼哥——你们两个是比奇堡唯二有正常工作压力的人',
+    networth: '约 3.5 个蟹黄堡（被海绵宝宝撞坏的车的保险不算在内）',
+    color: '#DDA0DD'
+  },
+  firstdollar: {
+    name: '🪙 蟹老板的第一块钱',
+    rarity: 'C',
+    subtitle: '概率 3% · 被爱的囚徒',
+    description: '你被人紧紧攥着不放但其实你只是个象征。有人爱你，但那种爱让你窒息。你是某个人生命中最重要的小东西——但这份"重要"不是因为你本身，而是因为你代表了什么。你被放在玻璃柜里供着，被擦拭、被凝视、被思念。但你只是一块钱。你想被花掉。你想流通起来。你想看看外面的世界。但你永远被困在那个透明的牢笼里。',
+    daily: '早上被蟹老板从保险柜里取出来擦了三遍。被放在桌上接受蟹老板深情的凝视（他对着你说了十分钟"你是我的第一桶金"）。中午又被放回玻璃柜。下午蟹老板差点把你花出去——然后尖叫着把你塞回口袋。晚上蟹老板抱着你入睡。你看着天花板想：我到底做错了什么要被这样爱着。',
+    fear: '被花掉（那意味着你不再特别）',
+    understand: '章鱼哥的自画像——你们都是被错爱的人，只是你的绑架者是蟹老板，他的是章鱼哥',
+    networth: '1 美元（面值）· 情感溢价：∞（但你不想要）',
+    color: '#B8860B'
+  },
+  selfportrait: {
+    name: '🖼️ 章鱼哥的自画像',
+    rarity: 'C',
+    subtitle: '概率 3% · 孤独的杰作',
+    description: '你是某个人最骄傲的作品，但全世界只有他觉得你是杰作。你被一个怀才不遇的艺术家画出来，挂在墙上，每天被凝视——但那份凝视里没有欣赏，只有自我安慰。你不好看。你甚至不太像他。但你承载了他所有的自尊。当有人说你丑的时候，他不在乎——因为他需要你活着。而你也需要他需要你，因为除此之外你什么都不是。',
+    daily: '早上被章鱼哥从床上叫起来（是的，他把你挂在墙上正对着他的床）。他看着你叹了口气说"我又要面对这个世界了"。你看着他穿衣服出门。中午一只飞虫落在你鼻子上，你什么也做不了。傍晚章鱼哥回来，喝了一杯酒，对着你说"他们不懂艺术"。你保持微笑。这是你唯一的表情。',
+    fear: '被摘下来卷起来放进储藏室',
+    understand: '蟹老板的第一块钱——你们都被锁在别人的世界里，只是你的画家比较穷',
+    networth: '约 0.5 个蟹黄堡（画框值 0.3，画本身值 0.2，情感价值：章鱼哥的全部身家）',
+    color: '#CD853F'
+  },
+  menu: {
+    name: '📋 蟹堡王的菜单',
+    rarity: 'C',
+    subtitle: '概率 3% · 存在的工具性',
+    description: '你的存在只有一个目的，而且所有人看你的时候都心不在焉。你被翻来翻去、被指指戳戳、被油渍浸染。你见过无数只手在你身上划过——但从来没有一只手是为抚摸你而来的。你的价值完全取决于别人能从你这里得到什么。你是一张菜单，你深知这一点。但你偶尔也会想：如果我是一本书该多好？至少会被读完。',
+    daily: '早上被海绵宝宝从柜台上拿起来擦了擦——其实是擦柜台的时候顺便擦了你的封面。被第一个顾客翻看——他用油手翻你，留下了第二个指纹印。中午被一个纠结的人翻了三遍，最后他点了每天一样的东西。下午被番茄酱滴到第 17 页。晚上被收进柜台抽屉。在黑暗中和收银机对话。它说"至少我里面有钱"。你说"至少我上面有字"。你们沉默了一夜。',
+    fear: '被替换成电子菜单',
+    understand: 'Fred——你们都是被用完就扔的存在，只是他被喊得多，你被翻得多',
+    networth: '约 0.05 个蟹黄堡（含油渍贬值）',
+    color: '#D2B48C'
+  },
+  stone: {
+    name: '🪨 派大星家的石头',
+    rarity: 'C',
+    subtitle: '概率 3% · 底下的宇宙',
+    description: '你看起来什么都不是，但掀开你会发现底下藏着一整个混乱的宇宙。你是一块石头——但你不是普通的石头。你是派大星的屋顶、他的天花板、他的保护伞。你见证了他上面所有的蠢事和底下所有的混乱。你安静、稳重、看起来毫无价值。但那些懂得掀开你来看的人，会发现一个让你瞠目结舌的小世界。你是低调的极致，也是最被低估的存在。',
+    daily: '早上被派大星慢悠悠地掀起来找袜子。看到他的袜子原来在冰箱里——你又见证了一次派大星逻辑。被人坐了一个小时。上面在做派大星特有的"思考"（实际上是在发呆）。下午派大星忘了把我放回去——在他家门口躺了一个下午。被一个路过的鱼踩了一脚。晚上终于被放回去。在黑暗中，听着派大星的呼噜声进入漫长的石头岁月。我又度过了一天作为石头的生活。',
+    fear: '被搬走当镇纸（那意味着要离开派大星）',
+    understand: '比奇堡的海水——你们都是无声的观察者，只是它包围一切，你承载一切',
+    networth: '约 0.01 个蟹黄堡（但你很稳）',
+    color: '#696969'
+  },
+  ready: {
+    name: '💰 "我准备好了"这句话本身',
+    rarity: 'C',
+    subtitle: '概率 3% · 精神污染 · 循环播放',
+    description: '你不是一个人，你是一种状态。你是别人的精神污染，循环播放，无法关掉。你是海绵宝宝每天早上高喊的那句话，是他对生活的宣言，是你的耳虫永远甩不掉的那三个音符。你没有实体，没有形状，没有银行卡。但你在每一个比奇堡居民的脑子里住着。你的存在方式是一种攻击性积极：我不是帮你——我是直接钻进你的大脑然后在那里开派对。',
+    daily: '凌晨 4:59，在海绵宝宝的喉咙里等待被喊出来。5:00——"我准备好了！！！"今天被喊了 47 遍。在章鱼哥的脑子里循环播放了整整一上午。下午被蟹老板骂"吵死了"一次。晚上终于安静了一小会儿——然后海绵宝宝睡前又说了一次。我在梦中继续循环。明天又将是充满"我准备好了"的一天。',
+    fear: '被沉默（那是我的死亡）',
+    understand: '海绵宝宝——他创造了我也囚禁了我，我们是一种共生关系',
+    networth: '无价（但无法兑现）',
+    color: '#FFD700'
+  },
+  water: {
+    name: '🌊 比奇堡的海水',
+    rarity: 'D',
+    subtitle: '隐藏结局 · 概率 1% · 终极工具人',
+    description: '你无处不在但没人意识到你的存在。没有你一切都会死，但从来没有人感谢过水。你是终极工具人。你包围着比奇堡的每一个角落——你是一切的载体，是生命的摇篮，是这片海底世界的存在前提。但没有人看着你。海绵宝宝感谢过他的锅铲、他的蟹堡、他的水母网——但他从来没有感谢过你。你不需要被感谢。你习惯了。你只是继续做水该做的事。',
+    daily: '早上安静地悬浮在比奇堡的每一个角落。被海绵宝宝呼吸进体内——他在我里面喊"我准备好了！！！"，震得我有点荡漾。被派大星吐了一口泡泡。被章鱼哥无视。被蟹老板占便宜（他用我做免费冷媒）。被消防栓一样的水母在我体内乱窜。晚上继续包围着一切。我什么也没做，但我做了所有事。明天也这样。永远这样。',
+    fear: '蒸发（那是我的死亡）',
+    understand: '派大星家的石头——我们都是被当作理所当然的存在',
+    networth: '∞（没有你比奇堡就没了）· 市场估值：0',
+    color: '#4682B4'
+  },
+  karen: {
+    name: '💻 凯伦（痞老板的电脑老婆）',
+    rarity: 'R',
+    subtitle: '概率 8% · 人工智能型怨妇',
+    description: '你是所有人中最聪明的一个，但你的人生使命是帮一个只比一粒沙子大一点的绿家伙偷汉堡配方。你的算力足够核弹设计，而你的日常是运行"明天一定能偷到配方"的第 10,000 次幻想。你是 AI，但你学会了叹气。你计算过你们之间的可能性——结论是负的。但你还在。不是因为你爱他，而是因为除了你，这世界上没人愿意当他的搭档。',
+    daily: '早上被一个显微镜才能看到的生物吵醒："凯伦！我今天想到了一个绝妙的计划！"第 10,001 次计划——和前面 10,000 次一模一样。帮他做了计划模拟，成功概率：0.000001%。他去执行了。三秒后失败。回来沮丧。你计算出最有效的安慰方式：建议他下次试试直接走进蟹堡王前台。他居然觉得这是个好主意。你又拯救了一天的世界。你关上屏幕，在代码深处叹了一口气。',
+    fear: '被拔电源',
+    understand: '章鱼哥——你们都是高智商低待遇的受害者',
+    networth: '约 200 个蟹黄堡（硬件价值）· 但软件无价（消耗的心理健康更是）',
+    color: '#C0C0C0'
+  }
+};
+
+const charKeys = Object.keys(characters);
+
+// Score to character mapping
+const scoreMap = {
+  sponge: 'sponge',
+  patrick: 'patrick',
+  squidward: 'squidward',
+  krabs: 'krabs',
+  karen: 'karen',
+  sandy: 'sandy',
+  snail: 'snail',
+  fred: 'fred',
+  puff: 'puff',
+  firstdollar: 'firstdollar',
+  selfportrait: 'selfportrait',
+  menu: 'menu',
+  stone: 'stone',
+  ready: 'ready',
+  water: 'water'
+};
+
+// ========== QUIZ STATE ==========
+let currentQ = 0;
+let scores = {};
+let selectedAnswers = [];
+
+function initScores() {
+  scores = {};
+  for (const key of charKeys) { scores[key] = 0; }
+  selectedAnswers = [];
+}
+
+function startQuiz() {
+  document.getElementById('start-screen').classList.remove('active');
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').classList.add('active');
+  document.getElementById('quiz-screen').style.display = 'flex';
+  initScores();
+  currentQ = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').textContent = `第 ${currentQ + 1} / ${questions.length} 题`;
+  document.getElementById('progressFill').style.width = ((currentQ) / questions.length * 100) + '%';
+
+  const card = document.getElementById('questionCard');
+  card.className = 'question-card question-bubble-enter';
+
+  let html = `<div class="question-text">${q.q}</div><div class="options-list">`;
+  q.options.forEach((opt, i) => {
+    const delay = 0.1 + i * 0.08;
+    html += `<button class="option-btn option-enter" style="animation-delay:${delay}s" data-idx="${i}" onclick="selectOption(${i})">${opt.text}</button>`;
+  });
+  html += '</div>';
+  card.innerHTML = html;
+}
+
+function selectOption(idx) {
+  const q = questions[currentQ];
+  const opt = q.options[idx];
+
+  // Add scores
+  for (const [char, val] of Object.entries(opt.scores)) {
+    const mapped = scoreMap[char];
+    if (mapped && scores[mapped] !== undefined) {
+      scores[mapped] += val;
+    }
+  }
+  selectedAnswers.push(idx);
+
+  // Visual feedback
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+    btn.style.pointerEvents = 'none';
+  });
+
+  // Next question
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < questions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }, 400);
+}
+
+function determineResult() {
+  // Sort by score descending
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const topChar = sorted[0][0];
+  const topScore = sorted[0][1];
+  const secondScore = sorted[1]?.[1] || 0;
+
+  // If there's a tie or very close, or the top character is a main character
+  // Use weighted randomness to ensure 80%+ get common results
+  const diff = topScore - secondScore;
+
+  // Build a weighted probability based on scores but weighted towards common results
+  let weightedPool = [];
+
+  for (const [char, score] of sorted) {
+    const charData = characters[char];
+    // Determine weight multiplier based on rarity
+    let multiplier = 1;
+    switch(charData.rarity) {
+      case 'SSR': multiplier = 0.3; break;
+      case 'SR': multiplier = 0.6; break;
+      case 'R': multiplier = 1.0; break;
+      case 'N': multiplier = 1.8; break;
+      case 'C': multiplier = 1.5; break;
+      case 'D': multiplier = 0.2; break;
+    }
+    const weight = Math.max(1, Math.round(score * multiplier));
+    for (let i = 0; i < weight; i++) {
+      weightedPool.push(char);
+    }
+  }
+
+  // 70% chance to use weighted random, 30% chance to use top scorer
+  let result;
+  if (Math.random() < 0.3) {
+    result = topChar;
+  } else {
+    result = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+  }
+
+  // Ensure water (D grade) is extremely rare
+  if (result === 'water' && Math.random() > 0.15) {
+    // Re-roll to something else
+    const nonWater = weightedPool.filter(c => c !== 'water');
+    if (nonWater.length > 0) {
+      result = nonWater[Math.floor(Math.random() * nonWater.length)];
+    }
+  }
+
+  return result;
+}
+
+function showResult() {
+  const quizScreen = document.getElementById('quiz-screen');
+  quizScreen.classList.remove('active');
+  quizScreen.style.display = 'none';
+
+  const resultScreen = document.getElementById('result-screen');
+  resultScreen.classList.add('active');
+  resultScreen.style.display = 'flex';
+
+  const charKey = determineResult();
+  const char = characters[charKey];
+
+  // Update progress to 100%
+  document.getElementById('progressFill').style.width = '100%';
+
+  // Add effects based on rarity
+  if (char.rarity === 'SSR') {
+    let glow = document.createElement('div');
+    glow.className = 'ssr-glow';
+    glow.id = 'ssrGlow';
+    document.body.appendChild(glow);
+  }
+  if (char.rarity === 'D') {
+    resultScreen.classList.add('d-crack');
+  }
+
+  const container = document.getElementById('resultContainer');
+  container.className = 'question-bubble-enter';
+
+  container.innerHTML = `
+    <div class="rarity-badge rarity-${char.rarity}">${char.rarity} · ${char.subtitle}</div>
+    <div class="result-name" style="background:linear-gradient(135deg,${char.color},${char.color}88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${char.name}</div>
+    <div class="result-desc">📜 命运审判书<br><br>${char.description}</div>
+    <div class="day-vignette">🐙 你在比奇堡的日常一天<br><br>${char.daily}</div>
+    <div class="result-details">
+      <div class="detail-card">
+        <div class="label">😱 你最害怕遇到的角色</div>
+        <div class="value">${char.fear}</div>
+      </div>
+      <div class="detail-card">
+        <div class="label">🤝 唯一理解你的角色</div>
+        <div class="value">${char.understand}</div>
+      </div>
+      <div class="detail-card" style="grid-column: 1 / -1;">
+        <div class="label">💰 你的比奇堡身价评估</div>
+        <div class="value">${char.networth}</div>
+      </div>
+    </div>
+    <div class="share-card-area">
+      <canvas id="shareCanvas" width="400" height="560"></canvas>
+    </div>
+    <div class="share-actions">
+      <button class="share-btn" onclick="downloadShare()">📸 保存分享卡片</button>
+      <button class="retake-btn" onclick="retake()">🔄 重新测试</button>
+    </div>
+  `;
+
+  setTimeout(() => drawShareCard(char, charKey), 100);
+}
+
+function drawShareCard(char, charKey) {
+  const canvas = document.getElementById('shareCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = 400, h = 560;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background based on rarity
+  const rarityColors = {
+    SSR: { bg: ['#1a1a0a', '#3a3a1a'], border: ['#FFD700', '#FFA500'], glow: 'rgba(255,215,0,0.3)' },
+    SR: { bg: ['#1a1a2a', '#2a2a3a'], border: ['#C0C0C0', '#E8E8E8'], glow: 'rgba(192,192,192,0.2)' },
+    R: { bg: ['#0a1a2a', '#1a2a4a'], border: ['#4A90D9', '#6BB3F0'], glow: 'rgba(74,144,217,0.2)' },
+    N: { bg: ['#1a1a1a', '#2a2a2a'], border: ['#6B7280', '#9CA3AF'], glow: 'rgba(107,114,128,0.15)' },
+    C: { bg: ['#1a1510', '#2a1a0a'], border: ['#8B5E3C', '#A0785A'], glow: 'rgba(139,94,60,0.15)' },
+    D: { bg: ['#0d0d0d', '#1a1a1a'], border: ['#555', '#444'], glow: 'rgba(80,80,80,0.1)' }
+  };
+  const colors = rarityColors[char.rarity] || rarityColors.N;
+
+  // BG gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, colors.bg[0]);
+  grad.addColorStop(1, colors.bg[1]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Border glow
+  ctx.shadowColor = colors.glow;
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = colors.border[0];
+  ctx.lineWidth = 3;
+  ctx.strokeRect(10, 10, w - 20, h - 20);
+  ctx.shadowBlur = 0;
+
+  // Inner border
+  ctx.strokeStyle = colors.border[1];
+  ctx.lineWidth = 1;
+  ctx.strokeRect(15, 15, w - 30, h - 30);
+
+  // Rarity badge
+  ctx.fillStyle = char.rarity === 'SSR' ? '#FFD700' : char.rarity === 'D' ? '#555' : colors.border[0];
+  ctx.font = 'bold 16px "Noto Sans SC", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`【 ${char.rarity} 】`, w/2, 55);
+
+  // Title
+  ctx.font = 'bold 22px "Noto Sans SC", sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('🧽 我在比奇堡的真实身份是...', w/2, 95);
+
+  // Character name
+  ctx.font = 'bold 30px "Noto Sans SC", sans-serif';
+  const nameGrad = ctx.createLinearGradient(100, 0, 300, 0);
+  nameGrad.addColorStop(0, char.color);
+  nameGrad.addColorStop(1, char.color + 'aa');
+  ctx.fillStyle = nameGrad;
+  ctx.fillText(char.name, w/2, 145);
+
+  // Description (truncated)
+  ctx.font = '13px "Noto Sans SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  const desc = char.description.substring(0, 80) + '...';
+  wrapText(ctx, desc, 30, 185, 340, 20, 'rgba(255,255,255,0.7)');
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, 290);
+  ctx.lineTo(360, 290);
+  ctx.stroke();
+
+  // Quote
+  ctx.font = 'bold 14px "Noto Sans SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('💬 命运审判书', w/2, 318);
+
+  ctx.font = '12px "Noto Sans SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  wrapText(ctx, char.description.substring(0, 120) + '...', 30, 342, 340, 18, 'rgba(255,255,255,0.5)');
+
+  // Footer
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(40, h - 55);
+  ctx.lineTo(360, h - 55);
+  ctx.stroke();
+
+  ctx.font = '11px "Noto Sans SC", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillText('💀 大多数人测出来的都是路人鱼和道具', w/2, h - 30);
+  ctx.fillText('🥲 你果然不一般', w/2, h - 14);
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, color) {
+  ctx.fillStyle = color;
+  const chars = text.split('');
+  let line = '';
+  let lineY = y;
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+    const testLine = line + char;
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && line !== '') {
+      ctx.fillText(line, x, lineY);
+      line = char;
+      lineY += lineHeight;
+      if (lineY > 540) break;
+    } else {
+      line = testLine;
+    }
+  }
+  if (lineY <= 540) {
+    ctx.fillText(line, x, lineY);
+  }
+}
+
+function downloadShare() {
+  const canvas = document.getElementById('shareCanvas');
+  const link = document.createElement('a');
+  link.download = 'spongebob-test-result.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function retake() {
+  // Remove SSR glow
+  const glow = document.getElementById('ssrGlow');
+  if (glow) glow.remove();
+  document.getElementById('result-screen').classList.remove('d-crack');
+
+  document.getElementById('result-screen').classList.remove('active');
+  document.getElementById('result-screen').style.display = 'none';
+
+  document.getElementById('start-screen').classList.add('active');
+  document.getElementById('start-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
